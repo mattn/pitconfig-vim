@@ -18,7 +18,7 @@
 " Tips:
 "   you can get pit config as Dictionary like following.
 "
-"   :echo PitGet("vimrc")[my_vim_config]
+"   :echo PitGet('vimrc')['my_vim_config']
 
 if &cp || (exists('g:loaded_pitconfig') && g:loaded_pitconfig)
   finish
