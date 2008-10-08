@@ -6,25 +6,36 @@
 " Usage:
 "   :PitReload
 "     reload pit config named as g:pitconfig_default
+"
 "   :PitLoad profile
 "     load pit config named as 'profile'
+"
+"   :PitShow
+"     show current pit config named as g:pitconfig_default
+"   :PitShow profile
+"     show current pit config named as 'profile'
+"
 "   :PitSave
 "     save current variables to pit config which named as g:pitconfig_default
 "   :PitSave profile
 "     save current variables to pit config which named as 'profile'
+"
 "   :PitAdd varname
 "     add variable to current pit config.
+"
 "   :PitDel varname
 "     delete variable from current pit config.
 "
 " Tips:
 "   you can get pit config as Dictionary like following.
 "
-"   :echo PitGet('vimrc')['my_vim_config']
+"     :echo PitGet('vimrc')['my_vim_config']
+"     :echo PitGet()['my_vim_config']
 "
-"    or
+"   you can set pit config like following.
 "
-"   :echo PitGet()['my_vim_config']
+"     :call PitSet({ 'foo': 'bar' })
+"     :call PitSet({ 'foo': 'bar' }, 'myprofile')
 
 if &cp || (exists('g:loaded_pitconfig') && g:loaded_pitconfig)
   finish
@@ -50,15 +61,18 @@ __END__
 "}}}
 
 function! PitGet(...)
-  let l:profile = g:pitconfig_default
-  if a:0 == 1 && len(a:1)
-    let l:profile = a:1
+  if a:0 == 0
+    let l:profname = g:pitconfig_default
+  elseif a:0 == 1 && len(a:1)
+    let l:profname = a:1
+  else
+    throw "too many arguments"
   endif
   let l:ret = {}
 "perl: get pit config as JSON string {{{
 perl <<__END__
 {
-  my $json = JSON::Syck::Dump(pit_get(''.VIM::Eval('l:profile')));
+  my $json = JSON::Syck::Dump(pit_get(''.VIM::Eval('l:profname')));
   VIM::DoCommand("let l:ret = $json");
   undef $json;
 }
@@ -70,11 +84,36 @@ __END__
   return l:ret
 endfunction
 
-function! s:PitLoad(profile)
+function! PitSet(...)
+  if a:0 == 1 && len(a:1)
+    let l:config = string(a:1)
+    let l:profname = g:pitconfig_default
+  elseif a:0 == 2 && len(a:1) && len(a:2)
+    let l:config = string(a:1)
+    let l:profname = a:2
+  else
+    throw "too many arguments"
+  endif
+  let l:ret = {}
+"perl: save to pit config {{{
+perl <<__END__
+{
+  local $JSON::Syck::SingleQuote = 1;
+  my $profname = ''.VIM::Eval('l:profname');
+  my $vals = VIM::Eval('l:config');
+  Config::Pit::set($profname, data => JSON::Syck::Load($vals));
+  undef $vals;
+  undef $profname;
+}
+__END__
+"}}}
+endfunction
+
+function! s:PitLoad(profname)
 "perl: load pit config to global scope {{{
 perl <<__END__
 {
-  my $config = pit_get(''.VIM::Eval('a:profile'));
+  my $config = pit_get(''.VIM::Eval('a:profname'));
   for my $key (keys %$config) {
     my $val = $config->{$key};
     if (!ref($val) || ref($val) eq 'SCALAR') {
@@ -91,14 +130,14 @@ __END__
 endfunction
 
 function! s:PitAdd(varname)
-  let l:profile = g:pitconfig_default
+  let l:profname = g:pitconfig_default
 "perl: add variable to pit config {{{
 perl <<__END__
 {
   local $JSON::Syck::SingleQuote = 1;
-  my $profile = ''.VIM::Eval('l:profile');
+  my $profname = ''.VIM::Eval('l:profname');
   my $varname = ''.VIM::Eval('a:varname');
-  my $config = pit_get($profile);
+  my $config = pit_get($profname);
   my $vals = {};
   $config->{$varname} = '';
   for my $key (keys %$config) {
@@ -113,22 +152,25 @@ perl <<__END__
       $vals->{$key} = VIM::Eval("g:$key");
     }
   }
-  Config::Pit::set($profile, data => $vals);
+  Config::Pit::set($profname, data => $vals);
+  undef $vals;
   undef $config;
+  undef $varname;
+  undef $profname;
 }
 __END__
 "}}}
 endfunction
 
 function! s:PitDel(varname)
-  let l:profile = g:pitconfig_default
+  let l:profname = g:pitconfig_default
 "perl: delete variable from pit config {{{
 perl <<__END__
 {
   local $JSON::Syck::SingleQuote = 1;
-  my $profile = ''.VIM::Eval('l:profile');
+  my $profname = ''.VIM::Eval('l:profname');
   my $varname = ''.VIM::Eval('a:varname');
-  my $config = pit_get($profile);
+  my $config = pit_get($profname);
   my $vals = {};
   for my $key (keys %$config) {
     next if $key eq $varname;
@@ -143,24 +185,49 @@ perl <<__END__
       $vals->{$key} = VIM::Eval("g:$key");
     }
   }
-  Config::Pit::set($profile, data => $vals);
+  Config::Pit::set($profname, data => $vals);
+  undef $vals;
   undef $config;
+  undef $varname;
+  undef $profname;
+}
+__END__
+"}}}
+endfunction
+
+function! s:PitShow(...)
+  let l:profname = g:pitconfig_default
+  if a:0 == 1 && len(a:1)
+    let l:profname = a:1
+  endif
+"perl: show pit config {{{
+perl <<__END__
+{
+  local $JSON::Syck::SingleQuote = 1;
+  my $profname = ''.VIM::Eval('l:profname');
+  my $config = pit_get($profname);
+  VIM::DoCommand("echohl Title");
+  VIM::DoCommand("echo ".JSON::Syck::Dump($profname));
+  VIM::DoCommand("echohl None");
+  VIM::DoCommand("echo ".JSON::Syck::Dump($config));
+  undef $config;
+  undef $profname;
 }
 __END__
 "}}}
 endfunction
 
 function! s:PitSave(...)
-  let l:profile = g:pitconfig_default
+  let l:profname = g:pitconfig_default
   if a:0 == 1 && len(a:1)
-    let l:profile = a:1
+    let l:profname = a:1
   endif
 "perl: save to pit config {{{
 perl <<__END__
 {
   local $JSON::Syck::SingleQuote = 1;
-  my $profile = ''.VIM::Eval('l:profile');
-  my $config = pit_get($profile);
+  my $profname = ''.VIM::Eval('l:profname');
+  my $config = pit_get($profname);
   my $vals = {};
   for my $key (keys %$config) {
     VIM::DoCommand("let l:type = type(g:$key)");
@@ -174,8 +241,10 @@ perl <<__END__
       $vals->{$key} = VIM::Eval("g:$key");
     }
   }
-  Config::Pit::set($profile, data => $vals);
+  Config::Pit::set($profname, data => $vals);
+  undef $vals;
   undef $config;
+  undef $profname;
 }
 __END__
 "}}}
@@ -184,6 +253,7 @@ endfunction
 command! PitReload :call s:PitLoad(g:pitconfig_default)
 command! -nargs=1 PitLoad :call s:PitLoad(<q-args>)
 command! -nargs=* PitSave :call s:PitSave(<q-args>)
+command! -nargs=* PitShow :call s:PitShow(<q-args>)
 command! -nargs=1 PitAdd :call s:PitAdd(<q-args>)
 command! -nargs=1 PitDel :call s:PitDel(<q-args>)
 
