@@ -1,7 +1,7 @@
 "=============================================================================
 " File: pitconfig.vim
 " Author: Yasuhiro Matsumoto <mattn.jp@gmail.com>
-" Last Change: Fri, 15 Feb 2008
+" Last Change: Wed, 08 Oct 2008
 " Version: 0.1
 " Usage:
 "   :PitReload
