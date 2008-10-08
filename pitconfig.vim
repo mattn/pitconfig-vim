@@ -49,8 +49,6 @@ use Config::Pit;
 __END__
 "}}}
 
-let s:Pit = {}
-
 function! PitGet(...)
   let l:profile = g:pitconfig_default
   if a:0 == 1 && len(a:1)
@@ -72,7 +70,7 @@ __END__
   return l:ret
 endfunction
 
-function! s:Pit:Load(profile)
+function! s:PitLoad(profile)
 "perl: load pit config to global scope {{{
 perl <<__END__
 {
@@ -92,7 +90,7 @@ __END__
 "}}}
 endfunction
 
-function! s:Pit:Add(varname)
+function! s:PitAdd(varname)
   let l:profile = g:pitconfig_default
 "perl: add variable to pit config {{{
 perl <<__END__
@@ -122,7 +120,7 @@ __END__
 "}}}
 endfunction
 
-function! s:Pit:Del(varname)
+function! s:PitDel(varname)
   let l:profile = g:pitconfig_default
 "perl: delete variable from pit config {{{
 perl <<__END__
@@ -152,7 +150,7 @@ __END__
 "}}}
 endfunction
 
-function! s:Pit:Save(...)
+function! s:PitSave(...)
   let l:profile = g:pitconfig_default
   if a:0 == 1 && len(a:1)
     let l:profile = a:1
@@ -183,14 +181,14 @@ __END__
 "}}}
 endfunction
 
-command! PitReload :call s:Pit:Load(g:pitconfig_default)
-command! -nargs=1 PitLoad :call s:Pit:Load(<q-args>)
-command! -nargs=* PitSave :call s:Pit:Save(<q-args>)
-command! -nargs=1 PitAdd :call s:Pit:Add(<q-args>)
-command! -nargs=1 PitDel :call s:Pit:Del(<q-args>)
+command! PitReload :call s:PitLoad(g:pitconfig_default)
+command! -nargs=1 PitLoad :call s:PitLoad(<q-args>)
+command! -nargs=* PitSave :call s:PitSave(<q-args>)
+command! -nargs=1 PitAdd :call s:PitAdd(<q-args>)
+command! -nargs=1 PitDel :call s:PitDel(<q-args>)
 
 if g:pitconfig_autoload
-  call s:Pit:Load(g:pitconfig_default)
+  call s:PitLoad(g:pitconfig_default)
 endif
 " vim:fdm=marker fdl=0 fdc=0 fdo+=jump,search:
 " vim:fdt=substitute(getline(v\:foldstart),'\\(.\*\\){\\{3}','\\1',''):
