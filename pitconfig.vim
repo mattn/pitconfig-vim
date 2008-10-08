@@ -12,6 +12,9 @@ endif
 if !exists('g:pitconfig_default')
   let g:pitconfig_default = 'vimrc'
 endif
+if !exists('g:pitconfig_autoload')
+  let g:pitconfig_autoload = 1
+endif
 
 if !has('perl')
   finish
@@ -129,6 +132,8 @@ command! -nargs=1 PitLoad :call s:Pit:Load(<q-args>)
 command! -nargs=* PitSave :call s:Pit:Save(<q-args>)
 command! -nargs=1 PitAdd :call s:Pit:Add(<q-args>)
 
-call s:Pit:Load(g:pitconfig_default)
+if g:pitconfig_autoload
+  call s:Pit:Load(g:pitconfig_default)
+endif
 " vim:fdm=marker fdl=0 fdc=0 fdo+=jump,search:
 " vim:fdt=substitute(getline(v\:foldstart),'\\(.\*\\){\\{3}','\\1',''):
