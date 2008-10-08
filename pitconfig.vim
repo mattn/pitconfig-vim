@@ -131,12 +131,13 @@ endfunction
 
 function! s:PitAdd(varname)
   let l:profname = g:pitconfig_default
+  let l:varname = substitute(a:varname, '^[gsl]:', '', '')
 "perl: add variable to pit config {{{
 perl <<__END__
 {
   local $JSON::Syck::SingleQuote = 1;
   my $profname = ''.VIM::Eval('l:profname');
-  my $varname = ''.VIM::Eval('a:varname');
+  my $varname = ''.VIM::Eval('l:varname');
   my $config = pit_get($profname);
   my $vals = {};
   $config->{$varname} = '';
@@ -164,12 +165,13 @@ endfunction
 
 function! s:PitDel(varname)
   let l:profname = g:pitconfig_default
+  let l:varname = substitute(a:varname, '^[gsl]:', '', '')
 "perl: delete variable from pit config {{{
 perl <<__END__
 {
   local $JSON::Syck::SingleQuote = 1;
   my $profname = ''.VIM::Eval('l:profname');
-  my $varname = ''.VIM::Eval('a:varname');
+  my $varname = ''.VIM::Eval('l:varname');
   my $config = pit_get($profname);
   my $vals = {};
   for my $key (keys %$config) {
@@ -254,8 +256,8 @@ command! PitReload :call s:PitLoad(g:pitconfig_default)
 command! -nargs=1 PitLoad :call s:PitLoad(<q-args>)
 command! -nargs=* PitSave :call s:PitSave(<q-args>)
 command! -nargs=* PitShow :call s:PitShow(<q-args>)
-command! -nargs=1 PitAdd :call s:PitAdd(<q-args>)
-command! -nargs=1 PitDel :call s:PitDel(<q-args>)
+command! -nargs=1 -complete=var PitAdd :call s:PitAdd(<q-args>)
+command! -nargs=1 -complete=var PitDel :call s:PitDel(<q-args>)
 
 if g:pitconfig_autoload
   call s:PitLoad(g:pitconfig_default)
