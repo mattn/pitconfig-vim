@@ -21,6 +21,10 @@
 "   you can get pit config as Dictionary like following.
 "
 "   :echo PitGet('vimrc')['my_vim_config']
+"
+"    or
+"
+"   :echo PitGet()['my_vim_config']
 
 if &cp || (exists('g:loaded_pitconfig') && g:loaded_pitconfig)
   finish
@@ -47,12 +51,16 @@ __END__
 
 let s:Pit = {}
 
-function! PitGet(profile)
+function! PitGet(...)
+  let l:profile = g:pitconfig_default
+  if a:0 == 1 && len(a:1)
+    let l:profile = a:1
+  endif
   let l:ret = {}
 "perl: get pit config as JSON string {{{
 perl <<__END__
 {
-  my $json = JSON::Syck::Dump(pit_get(''.VIM::Eval('a:profile')));
+  my $json = JSON::Syck::Dump(pit_get(''.VIM::Eval('l:profile')));
   VIM::DoCommand("let l:ret = $json");
   undef $json;
 }
