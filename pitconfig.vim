@@ -14,6 +14,8 @@
 "     save current variables to pit config which named as 'profile'
 "   :PitAdd varname
 "     add variable to current pit config.
+"   :PitDel varname
+"     delete variable from current pit config.
 "
 " Tips:
 "   you can get pit config as Dictionary like following.
@@ -84,7 +86,7 @@ endfunction
 
 function! s:Pit:Add(varname)
   let l:profile = g:pitconfig_default
-"perl: load pit config to global scope {{{
+"perl: add variable to pit config {{{
 perl <<__END__
 {
   local $JSON::Syck::SingleQuote = 1;
@@ -112,12 +114,42 @@ __END__
 "}}}
 endfunction
 
+function! s:Pit:Del(varname)
+  let l:profile = g:pitconfig_default
+"perl: delete variable from pit config {{{
+perl <<__END__
+{
+  local $JSON::Syck::SingleQuote = 1;
+  my $profile = ''.VIM::Eval('l:profile');
+  my $varname = ''.VIM::Eval('a:varname');
+  my $config = pit_get($profile);
+  my $vals = {};
+  for my $key (keys %$config) {
+    next if $key eq $varname;
+    VIM::DoCommand("let l:type = type(g:$key)");
+    my $type = VIM::Eval('l:type');
+    if ($type eq 3 || $type eq 4) {
+      VIM::DoCommand("let l:val = string(g:$key)");
+      my $val = VIM::Eval('l:val');
+      $vals->{$key} = JSON::Syck::Load($val);
+      VIM::DoCommand("silent! unlet l:val");
+    } else {
+      $vals->{$key} = VIM::Eval("g:$key");
+    }
+  }
+  Config::Pit::set($profile, data => $vals);
+  undef $config;
+}
+__END__
+"}}}
+endfunction
+
 function! s:Pit:Save(...)
   let l:profile = g:pitconfig_default
   if a:0 == 1 && len(a:1)
     let l:profile = a:1
   endif
-"perl: load pit config to global scope {{{
+"perl: save to pit config {{{
 perl <<__END__
 {
   local $JSON::Syck::SingleQuote = 1;
@@ -147,6 +179,7 @@ command! PitReload :call s:Pit:Load(g:pitconfig_default)
 command! -nargs=1 PitLoad :call s:Pit:Load(<q-args>)
 command! -nargs=* PitSave :call s:Pit:Save(<q-args>)
 command! -nargs=1 PitAdd :call s:Pit:Add(<q-args>)
+command! -nargs=1 PitDel :call s:Pit:Del(<q-args>)
 
 if g:pitconfig_autoload
   call s:Pit:Load(g:pitconfig_default)
