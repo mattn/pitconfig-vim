@@ -3,7 +3,23 @@
 " Author: Yasuhiro Matsumoto <mattn.jp@gmail.com>
 " Last Change: Fri, 15 Feb 2008
 " Version: 0.1
+" Usage:
+"   :PitReload
+"     reload pit config named as g:pitconfig_default
+"   :PitLoad profile
+"     load pit config named as 'profile'
+"   :PitSave
+"     save current variables to pit config which named as g:pitconfig_default
+"   :PitSave profile
+"     save current variables to pit config which named as 'profile'
+"   :PitAdd varname
+"     add variable to current pit config.
 "
+" Tips:
+"   you can get pit config as Dictionary like following.
+"
+"   :echo PitGet("vimrc")[my_vim_config]
+
 if &cp || (exists('g:loaded_pitconfig') && g:loaded_pitconfig)
   finish
 endif
