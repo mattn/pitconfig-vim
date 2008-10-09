@@ -15,6 +15,9 @@
 "   :PitShow profile
 "     show current pit config named as 'profile'
 "
+"   :PitEdit
+"     open pit config file with text editor asigned $EDITOR
+"
 "   :PitSave
 "     save current variables to pit config which named as g:pitconfig_default
 "   :PitSave profile
