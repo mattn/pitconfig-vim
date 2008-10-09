@@ -92,7 +92,7 @@ function! PitSet(...)
     let l:data = string(a:1)
     let l:profname = a:2
   else
-    throw "too many arguments"
+    throw "too many or few arguments"
   endif
   let l:ret = {}
 "perl: save to pit config {{{
