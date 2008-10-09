@@ -38,7 +38,7 @@
 "     :call PitSet({ 'foo': 'bar' }, 'myprofile')
 
 if &cp || (exists('g:loaded_pitconfig') && g:loaded_pitconfig)
-  finish
+  "finish
 endif
 let g:loaded_pitconfig = 1
 
@@ -210,21 +210,13 @@ function! s:PitShow(...)
   if a:0 == 1 && len(a:1)
     let l:profname = a:1
   endif
-"perl: show pit config {{{
-perl <<__END__
-{
-  local $JSON::Syck::SingleQuote = 1;
-  my $profname = ''.VIM::Eval('l:profname');
-  my $config = pit_get($profname);
-  VIM::DoCommand("echohl Title");
-  VIM::DoCommand("echo ".JSON::Syck::Dump($profname));
-  VIM::DoCommand("echohl None");
-  VIM::DoCommand("echo ".JSON::Syck::Dump($config));
-  undef $config;
-  undef $profname;
-}
-__END__
-"}}}
+  let l:config = PitGet(l:profname)
+  echohl Title | echo l:profname | echohl None
+  for l:key in keys(l:config)
+    echohl LineNr | echo l:key | echohl None | echon ":"
+    echo " " l:config[key]
+  endfor
+  silent! unlet l:config
 endfunction
 
 function! s:PitEdit(...)
