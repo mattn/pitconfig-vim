@@ -39,9 +39,11 @@
 "
 "     :call PitSet({ 'foo': 'bar' })
 "     :call PitSet({ 'foo': 'bar' }, 'myprofile')
+"
+" GetLatestVimScripts: 2404 1 :AutoInstall: pitconfig.vim
 
 if &cp || (exists('g:loaded_pitconfig') && g:loaded_pitconfig)
-  "finish
+  finish
 endif
 let g:loaded_pitconfig = 1
 
